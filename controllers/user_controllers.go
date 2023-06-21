@@ -19,22 +19,31 @@ type APIEnv struct {
 }
 
 func (UserControllers *APIEnv) GetAllUsers(c *gin.Context) {
+	// fmt.Println("The URL: ", c.Request.Host+c.Request.URL.Path)
 	reqPage, err := strconv.Atoi(c.Query("page"))
-	if err != nil {
-		fmt.Println("Error during conversion")
+	if err != nil || reqPage < 1{
+		c.JSON(http.StatusOK, gin.H{
+			"message": "request page should not < 1",
+		})
+		// fmt.Println("Error during convert reqPage")
 		return
 	}
 	reqLimit, err := strconv.Atoi(c.Query("limit"))
-	if err != nil {
-		fmt.Println("Error during conversion")
+	if err != nil || reqLimit < 1{
+		c.JSON(http.StatusOK, gin.H{
+			"message": "request limit should not < 1",
+		})
+		// fmt.Println("Error during convert reqLimit")
 		return
 	}
 	reqSort := c.Query("sort")
+	reqFilter := c.Query("filter")
 
 	requestPagination := models.Pagination{
 		Page : reqPage,
 		Limit : reqLimit,
 		Sort : reqSort,
+		Filter : reqFilter,
 	}
 	
 	generatePagination := GeneratePaginationFromRequest(c, requestPagination)
@@ -176,6 +185,7 @@ func GeneratePaginationFromRequest(c *gin.Context, requestPagination models.Pagi
 	limit := requestPagination.Limit
 	page := requestPagination.Page
 	sort := requestPagination.Sort
+	filter := requestPagination.Filter
 	query := c.Request.URL.Query()
 	for key, value := range query {
 		queryValue := value[len(value)-1]
@@ -196,6 +206,7 @@ func GeneratePaginationFromRequest(c *gin.Context, requestPagination models.Pagi
 		Limit: limit,
 		Page:  page,
 		Sort:  sort,
+		Filter:  filter,
 	}
 
 }
