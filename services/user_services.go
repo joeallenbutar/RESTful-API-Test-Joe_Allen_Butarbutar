@@ -4,6 +4,7 @@ import (
 	"RESTful-API-Test-Joe_Allen_Butarbutar/models"
 	"errors"
 	"gorm.io/gorm"
+	"fmt"
 )
 
 func CreateUser(db *gorm.DB, user *models.User) error {
@@ -14,9 +15,11 @@ func CreateUser(db *gorm.DB, user *models.User) error {
 	return nil
 }
 
-func GetUsers(db *gorm.DB) ([]models.User, error) {
+func GetAllUsers(db *gorm.DB, pagination *models.Pagination) ([]models.User, error) {
 	users := []models.User{}
-	query := db.Select("users.*").Group("users.id")
+	offset := (pagination.Page - 1) * pagination.Limit
+	query := db.Select("users.*").Group("users.id").Limit(pagination.Limit).Order(pagination.Sort).Offset(offset)
+	fmt.Println(query)
 	if err := query.Find(&users).Error; err != nil {
 		return users, err
 	}

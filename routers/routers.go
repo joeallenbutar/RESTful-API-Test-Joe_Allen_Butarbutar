@@ -15,7 +15,7 @@ func Setup() *gin.Engine {
 
 	r := route.Group("/users")
 	{
-		r.GET("", api.GetUsers)
+		r.GET("", api.GetAllUsers)
 		r.POST("", api.CreateUser)
 		r.GET("/:id", api.GetUserByID)
 		r.PUT("/:id", api.UpdateUser)

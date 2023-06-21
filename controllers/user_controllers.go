@@ -6,7 +6,7 @@ import (
 	"fmt"
 	_"log"
 	"net/http"
-	_"strconv"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -18,8 +18,27 @@ type APIEnv struct {
 	DB *gorm.DB
 }
 
-func (UserControllers *APIEnv) GetUsers(c *gin.Context) {
-	Users, err := services.GetUsers(UserControllers.DB)
+func (UserControllers *APIEnv) GetAllUsers(c *gin.Context) {
+	reqPage, err := strconv.Atoi(c.Query("page"))
+	if err != nil {
+		fmt.Println("Error during conversion")
+		return
+	}
+	reqLimit, err := strconv.Atoi(c.Query("limit"))
+	if err != nil {
+		fmt.Println("Error during conversion")
+		return
+	}
+	reqSort := c.Query("sort")
+
+	requestPagination := models.Pagination{
+		Page : reqPage,
+		Limit : reqLimit,
+		Sort : reqSort,
+	}
+	
+	generatePagination := GeneratePaginationFromRequest(c, requestPagination)
+	Users, err := services.GetAllUsers(UserControllers.DB, &generatePagination)
 	if err != nil {
 		fmt.Println(c, http.StatusNotFound, err)
 		return
@@ -149,4 +168,34 @@ func (UserControllers *APIEnv) DeleteUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "user deleted successfully",
 	})
+}
+
+func GeneratePaginationFromRequest(c *gin.Context, requestPagination models.Pagination) models.Pagination {
+	// Initializing default
+	//	var mode string
+	limit := requestPagination.Limit
+	page := requestPagination.Page
+	sort := requestPagination.Sort
+	query := c.Request.URL.Query()
+	for key, value := range query {
+		queryValue := value[len(value)-1]
+		switch key {
+		case "limit":
+			limit, _ = strconv.Atoi(queryValue)
+			break
+		case "page":
+			page, _ = strconv.Atoi(queryValue)
+			break
+		case "sort":
+			sort = queryValue
+			break
+
+		}
+	}
+	return models.Pagination{
+		Limit: limit,
+		Page:  page,
+		Sort:  sort,
+	}
+
 }
