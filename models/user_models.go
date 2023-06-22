@@ -17,8 +17,8 @@ type User struct {
 }
 
 type Pagination struct {
-	Limit int    `json:"limit"`
-	Page  int    `json:"page"`
-	Sort  string `json:"sort"`
-	Filter  string `json:"filter"`
+	Limit string   
+	Page  string    
+	Sort  string 
+	Filter  string 
 }

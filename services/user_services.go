@@ -4,7 +4,8 @@ import (
 	"RESTful-API-Test-Joe_Allen_Butarbutar/models"
 	"errors"
 	"gorm.io/gorm"
-	_"fmt"
+	"fmt"
+	"strconv"
 )
 
 func CreateUser(db *gorm.DB, user *models.User) error {
@@ -17,24 +18,41 @@ func CreateUser(db *gorm.DB, user *models.User) error {
 
 func GetAllUsers(db *gorm.DB, pagination *models.Pagination) ([]models.User, error) {
 	users := []models.User{}
-	offset := (pagination.Page - 1) * pagination.Limit
-	// query := db.Select("users.*").Group("users.id").Limit(pagination.Limit).Order(pagination.Sort).Offset(offset)
 
-	if pagination.Page > 0 || pagination.Limit > 0{
-		query := db.Select("users.*").Group("users.id").Where(pagination.Filter).Limit(pagination.Limit).Order(pagination.Sort).Offset(offset)
-		if err := query.Find(&users).Error; err != nil {
+	reqPage, _ := strconv.Atoi(pagination.Page)
+	reqLimit, _ := strconv.Atoi(pagination.Limit)
+	offset := (reqPage - 1) * reqLimit
+	query := db.Select("users.*").Group("users.id")
+
+	if reqPage > 0 || reqLimit > 0 || offset > 0{
+		fmt.Println("query panjang")
+		queryExt := query.Where(pagination.Filter).Limit(reqLimit).Order(pagination.Sort).Offset(offset)
+		if err := queryExt.Find(&users).Error; err != nil {
 			return users, err
 		}
+
+	}else if pagination.Filter != "" {
+		fmt.Println("query hanya filter yang ada")
+		fmt.Println("pagination.Filter")
+		queryExt := query.Where(pagination.Filter)
+		if err := queryExt.Find(&users).Error; err != nil {
+			return users, err
+		}
+
+	}else if pagination.Sort != ""{
+		fmt.Println("query hanya sort yang ada")
+		queryExt := query.Order(pagination.Sort)
+		if err := queryExt.Find(&users).Error; err != nil {
+			return users, err
+		}
+
 	}else{
-		query := db.Select("users.*").Group("users.id").Order(pagination.Sort)
-		if err := query.Find(&users).Error; err != nil {
+		fmt.Println("query semua kosong")
+		queryExt := query.Order(pagination.Sort)
+		if err := queryExt.Find(&users).Error; err != nil {
 			return users, err
 		}
 	}
-	// fmt.Println(query)
-	// if err := query.Find(&users).Error; err != nil {
-	// 	return users, err
-	// }
 
 	return users, nil
 }

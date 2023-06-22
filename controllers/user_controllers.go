@@ -6,7 +6,7 @@ import (
 	"fmt"
 	_"log"
 	"net/http"
-	"strconv"
+	_"strconv"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -19,33 +19,12 @@ type APIEnv struct {
 }
 
 func (UserControllers *APIEnv) GetAllUsers(c *gin.Context) {
-	// fmt.Println("The URL: ", c.Request.Host+c.Request.URL.Path)
-	reqPage, err := strconv.Atoi(c.Query("page"))
-	if err != nil || reqPage < 1{
-		c.JSON(http.StatusOK, gin.H{
-			"message": "request page should not < 1",
-		})
-		// fmt.Println("Error during convert reqPage")
-		return
-	}
-	reqLimit, err := strconv.Atoi(c.Query("limit"))
-	if err != nil || reqLimit < 1{
-		c.JSON(http.StatusOK, gin.H{
-			"message": "request limit should not < 1",
-		})
-		// fmt.Println("Error during convert reqLimit")
-		return
-	}
-	reqSort := c.Query("sort")
-	reqFilter := c.Query("filter")
-
 	requestPagination := models.Pagination{
-		Page : reqPage,
-		Limit : reqLimit,
-		Sort : reqSort,
-		Filter : reqFilter,
+		Page : c.Query("page"),
+		Limit : c.Query("limit"),
+		Sort : c.Query("sort"),
+		Filter : c.Query("filter"),
 	}
-	
 	generatePagination := GeneratePaginationFromRequest(c, requestPagination)
 	Users, err := services.GetAllUsers(UserControllers.DB, &generatePagination)
 	if err != nil {
@@ -71,12 +50,6 @@ func (UserControllers *APIEnv) CreateUser(c *gin.Context) {
 		return
 	}
 
-	// if err := UserControllers.DB.Create(&user).Error; err != nil {
-	// 	fmt.Println(c, http.StatusInternalServerError, err)
-	// 	return
-	// }
-
-	// c.JSON(http.StatusOK, User)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "user created successfully",
 		"data" : user,
@@ -85,10 +58,6 @@ func (UserControllers *APIEnv) CreateUser(c *gin.Context) {
 
 func (UserControllers *APIEnv) GetUserByID(c *gin.Context) {
 	userId := c.Params.ByName("id")
-	// userId, err := strconv.Atoi(id)
-	// if err != nil {
-	// 	fmt.Println(c, http.StatusBadRequest, err)
-	// }
 
 	User, exists, err := services.GetUserByID(userId, UserControllers.DB)
 	if err != nil {
@@ -108,12 +77,7 @@ func (UserControllers *APIEnv) GetUserByID(c *gin.Context) {
 }
 
 func (UserControllers *APIEnv) UpdateUser(c *gin.Context) {
-
 	userId := c.Params.ByName("id")
-	// userId, err := strconv.Atoi(id)
-	// if err != nil {
-	// 	fmt.Println(c, http.StatusBadRequest, err)
-	// }
 
 	dataUser, exists, err := services.GetUserByID(userId, UserControllers.DB)
 	if err != nil {
@@ -149,10 +113,6 @@ func (UserControllers *APIEnv) UpdateUser(c *gin.Context) {
 
 func (UserControllers *APIEnv) DeleteUser(c *gin.Context) {
 	userId := c.Params.ByName("id")
-	// userId, err := strconv.Atoi(id)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
 
 	_, exists, err := services.GetUserByID(userId, UserControllers.DB)
 	if err != nil {
@@ -180,8 +140,6 @@ func (UserControllers *APIEnv) DeleteUser(c *gin.Context) {
 }
 
 func GeneratePaginationFromRequest(c *gin.Context, requestPagination models.Pagination) models.Pagination {
-	// Initializing default
-	//	var mode string
 	limit := requestPagination.Limit
 	page := requestPagination.Page
 	sort := requestPagination.Sort
@@ -191,10 +149,10 @@ func GeneratePaginationFromRequest(c *gin.Context, requestPagination models.Pagi
 		queryValue := value[len(value)-1]
 		switch key {
 		case "limit":
-			limit, _ = strconv.Atoi(queryValue)
+			limit = queryValue
 			break
 		case "page":
-			page, _ = strconv.Atoi(queryValue)
+			page = queryValue
 			break
 		case "sort":
 			sort = queryValue
